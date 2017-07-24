@@ -30,21 +30,22 @@ namespace ParisStateServicesBot
         {
             while (!token.IsCancellationRequested)
             {
+                var delay = TimeSpan.FromMinutes(5);
                 var stopwatch = Stopwatch.StartNew();
                 try
                 {
                     var bookingStatus = factory.BookingStatusLoader.GetBookingStatus();
                     if (!bookingStatus.Contains("Vérification de disponibilité"))
                         await bot.NotifyAsync(bookingStatus);
-
                 }
                 catch (Exception e)
                 {
+                    delay = TimeSpan.FromSeconds(30);
                     Console.WriteLine(e);
                 }
                 stopwatch.Stop();
-                if (stopwatch.Elapsed.TotalMinutes < 5)
-                    await Task.Delay(TimeSpan.FromMinutes(5) - stopwatch.Elapsed, token);
+                if (stopwatch.Elapsed < delay)
+                    await Task.Delay(delay - stopwatch.Elapsed, token);
             }
         }
     }
