@@ -22,7 +22,13 @@ namespace ParisStateServicesBot
                 var task = Task.Run(() => RunNotifier(factory, bot, token.Token), token.Token);
                 Console.ReadKey();
                 token.Cancel();
-                await task;
+                try
+                {
+                    await task.ConfigureAwait(false);
+                }
+                catch
+                {
+                }
             }
         }
 
@@ -35,18 +41,17 @@ namespace ParisStateServicesBot
                 try
                 {
                     var bookingStatus = factory.BookingStatusLoader.GetBookingStatus();
-                    if (!bookingStatus.Contains("Vérification de disponibilité"))
-                        await bot.NotifyAsync(bookingStatus);
+                    await bot.NotifyAsync(bookingStatus).ConfigureAwait(false);
                 }
                 catch (Exception e)
                 {
                     delay = TimeSpan.FromSeconds(30);
-                    await bot.NotifyErrorAsync(e);
+                    await bot.NotifyErrorAsync(e).ConfigureAwait(false);
                     Console.WriteLine(e);
                 }
                 stopwatch.Stop();
                 if (stopwatch.Elapsed < delay)
-                    await Task.Delay(delay - stopwatch.Elapsed, token);
+                    await Task.Delay(delay - stopwatch.Elapsed, token).ConfigureAwait(false);
             }
         }
     }

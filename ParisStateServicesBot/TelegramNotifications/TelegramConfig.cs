@@ -9,6 +9,6 @@ namespace ParisStateServicesBot.TelegramNotifications
 
         public string BotToken { get; set; }
 
-        public string OwnerChatId { get; set; }
+        public long OwnerChatId { get; set; }
     }
 }

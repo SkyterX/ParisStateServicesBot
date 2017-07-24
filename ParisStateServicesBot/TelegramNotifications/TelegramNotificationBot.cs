@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Args;
+using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
 namespace ParisStateServicesBot.TelegramNotifications
@@ -30,36 +31,51 @@ namespace ParisStateServicesBot.TelegramNotifications
 
         private async void HandleMessage(object sender, MessageEventArgs args)
         {
-            var message = args.Message;
+            try
+            {
+                var message = args.Message;
+                if (message?.Type != MessageType.TextMessage) return;
+                var response = await HandleMessageAsync(message);
+                await Bot.SendTextMessageAsync(message.Chat.Id, response).ConfigureAwait(false);
+            }
+            catch (Exception e)
+            {
+                await NotifyErrorAsync(e);
+            }
+        }
 
-            if (message?.Type != MessageType.TextMessage) return;
+        private async Task<string> HandleMessageAsync(Message message)
+        {
             if (message.Text.StartsWith("/subscribe"))
             {
                 await SubscriptionDB.CreateAsync(new TelegramSubscription {ChatId = message.Chat.Id}).ConfigureAwait(false);
-                await Bot.SendTextMessageAsync(message.Chat.Id, "Welcome! You subscribed to the notifications.").ConfigureAwait(false);
-                return;
+                return "Welcome! You subscribed to the notifications.";
             }
             if (message.Text.StartsWith("/ping"))
-            {
-                await Bot.SendTextMessageAsync(message.Chat.Id, "Pong!").ConfigureAwait(false);
-                return;
-            }
+                return "Pong!";
             if (message.Text.StartsWith("/last"))
             {
                 var lastMessage = await NotificationsDB.LoadLatestAsync();
-                await Bot.SendTextMessageAsync(message.Chat.Id, $"Latest message was at {lastMessage.Timestamp:T}\n{lastMessage.Message}");
+                if (lastMessage == null)
+                {
+                    return "No messages yet.";
+                }
+
+                var lastMessageTime = lastMessage.Timestamp + (message.Date - DateTime.UtcNow);
+                return $"Latest message was at {lastMessageTime:T}\n{lastMessage.Message}";
             }
 
-            var usage = @"Usage:
+            return @"Usage:
 /subscribe - subscribe to notifications
 ";
-
-            await Bot.SendTextMessageAsync(message.Chat.Id, usage);
         }
 
         public async Task NotifyAsync(string bookingStatus)
         {
             await NotificationsDB.InsertAsync(new TelegramNotification {Message = bookingStatus}).ConfigureAwait(false);
+            if (bookingStatus.Contains("Vérification de disponibilité"))
+                return;
+
             var subscriptions = await SubscriptionDB.LoadAllAsync();
             foreach (var subscription in subscriptions)
             {
