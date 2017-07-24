@@ -3,22 +3,8 @@ using System.Threading;
 
 namespace ParisStateServicesBot.Util
 {
-    /// <summary>
-    ///  A <see cref="Lazy"/> object that implements <see cref="IDisposable"/>.
-    /// </summary>
-    /// <typeparam name="T">
-    ///  The object being lazily created.
-    /// </typeparam>
-    public class LazyDisposable<T> : Lazy<T>, IDisposable where T : IDisposable
+    public class LazyDisposable<T> : Lazy<T>, IDisposable
     {
-        /// <summary>
-        ///  Initializes a new instance of the <see cref="LazyDisposable&lt;T&gt;"/> class.
-        ///  When lazy initialization occurs, the default constructor is used.
-        /// </summary>
-        public LazyDisposable()
-        {
-        }
-
         /// <summary>
         ///  Initializes a new instance of the <see cref="LazyDisposable&lt;T&gt;"/> class.
         ///  When lazy initialization occurs, the default constructor of the target type
@@ -90,7 +76,8 @@ namespace ParisStateServicesBot.Util
         /// </summary>
         public void Dispose()
         {
-            if (IsValueCreated) Value?.Dispose();
+            if (IsValueCreated)
+                (Value as IDisposable)?.Dispose();
         }
     }
 }

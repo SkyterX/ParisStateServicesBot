@@ -16,7 +16,7 @@ namespace ParisStateServicesBot
         private static async Task RunAsync()
         {
             using (var factory = new TheFactory())
-            using (var bot = await factory.NotificationBot)
+            using (var bot = await factory.Get<Task<TelegramNotificationBot>>())
             {
                 var token = new CancellationTokenSource();
                 var task = Task.Run(() => RunNotifier(factory, bot, token.Token), token.Token);
@@ -40,7 +40,7 @@ namespace ParisStateServicesBot
                 var stopwatch = Stopwatch.StartNew();
                 try
                 {
-                    var bookingStatus = factory.BookingStatusLoader.GetBookingStatus();
+                    var bookingStatus = factory.Get<BookingStatusLoader>().GetBookingStatus();
                     await bot.NotifyAsync(bookingStatus).ConfigureAwait(false);
                 }
                 catch (Exception e)

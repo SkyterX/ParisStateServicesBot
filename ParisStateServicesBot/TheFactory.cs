@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Threading.Tasks;
+using System.Collections.Generic;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using ParisStateServicesBot.TelegramNotifications;
@@ -9,43 +9,56 @@ namespace ParisStateServicesBot
 {
     public class TheFactory : IDisposable
     {
-        private readonly Lazy<Mongo> mongo;
-        private readonly Lazy<TelegramSubscriptionDB> telegramSubscriptionDB;
-        private readonly Lazy<TelegramConfigurationDB> telegramConfigurationDB;
-        private readonly Lazy<TelegramNotificationsDB> telegramNotificationsDB;
-        private readonly Lazy<Task<TelegramNotificationBot>> telegramNotificationBot;
-
-        private readonly LazyDisposable<IWebDriver> webDriver;
-        private readonly LazyDisposable<BookingStatusLoader> bookingStatusLoader;
-
         public TheFactory()
         {
-            webDriver = DisposableLazy<IWebDriver>(() => new ChromeDriver());
-            bookingStatusLoader = DisposableLazy(() => new BookingStatusLoader(WebDriver));
+            Register<IWebDriver>(() => new ChromeDriver());
+            Register((IWebDriver driver) => new BookingStatusLoader(driver));
 
-            mongo = Lazy(() => new Mongo());
-            telegramSubscriptionDB = Lazy(() => new TelegramSubscriptionDB(Mongo));
-            telegramConfigurationDB = Lazy(() => new TelegramConfigurationDB(Mongo));
-            telegramNotificationsDB = Lazy(() => new TelegramNotificationsDB(Mongo));
-            telegramNotificationBot = DisposableLazy(() => TelegramNotificationBot.CreateAsync(TelegramSubscriptionDB, TelegramNotificationsDB, TelegramConfigurationDB));
+            Register(() => new Mongo());
+            Register((Mongo mongo) => new TelegramSubscriptionDB(mongo));
+            Register((Mongo mongo) => new TelegramConfigurationDB(mongo));
+            Register((Mongo mongo) => new TelegramNotificationsDB(mongo));
+            Register((TelegramSubscriptionDB x,
+                    TelegramNotificationsDB y,
+                    TelegramConfigurationDB z)
+                => TelegramNotificationBot.CreateAsync(x, y, z));
         }
 
-        private static Lazy<T> Lazy<T>(Func<T> factory) => new Lazy<T>(factory);
-        private static LazyDisposable<T> DisposableLazy<T>(Func<T> factory) where T : IDisposable => new LazyDisposable<T>(factory);
+        public T Get<T>()
+        {
+            if (cache.TryGetValue(typeof(T), out var value))
+                return (T) value.Value;
+            throw new Exception($"Type {typeof(T).Name} has no implementations registered");
+        }
+
+        private void Register<T>(Func<T> factory)
+        {
+            cache.Add(typeof(T), new LazyDisposable<object>(() => factory()));
+        }
+
+        private void Register<TArg, T>(Func<TArg, T> factory)
+        {
+            cache.Add(typeof(T), new LazyDisposable<object>(() => factory(Get<TArg>())));
+        }
+
+        private void Register<TArg1, TArg2, T>(Func<TArg1, TArg2, T> factory)
+        {
+            cache.Add(typeof(T), new LazyDisposable<object>(() => factory(Get<TArg1>(), Get<TArg2>())));
+        }
+
+        private void Register<TArg1, TArg2, TArg3, T>(Func<TArg1, TArg2, TArg3, T> factory)
+        {
+            cache.Add(typeof(T), new LazyDisposable<object>(() => factory(Get<TArg1>(), Get<TArg2>(), Get<TArg3>())));
+        }
 
         public void Dispose()
         {
-            webDriver.Dispose();
-            bookingStatusLoader.Dispose();
+            foreach (var lazyDisposable in cache.Values)
+            {
+                lazyDisposable.Dispose();
+            }
         }
 
-        public IWebDriver WebDriver => webDriver.Value;
-        public BookingStatusLoader BookingStatusLoader => bookingStatusLoader.Value;
-
-        public Mongo Mongo => mongo.Value;
-        public TelegramSubscriptionDB TelegramSubscriptionDB => telegramSubscriptionDB.Value;
-        public TelegramConfigurationDB TelegramConfigurationDB => telegramConfigurationDB.Value;
-        public TelegramNotificationsDB TelegramNotificationsDB => telegramNotificationsDB.Value;
-        public Task<TelegramNotificationBot> NotificationBot => telegramNotificationBot.Value;
+        private readonly Dictionary<Type, LazyDisposable<object>> cache = new Dictionary<Type, LazyDisposable<object>>();
     }
 }

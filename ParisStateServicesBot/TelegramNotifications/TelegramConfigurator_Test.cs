@@ -12,7 +12,7 @@ namespace ParisStateServicesBot.TelegramNotifications
             {
                 BotToken = null
             };
-            Factory.TelegramConfigurationDB.CreateAsync(config).Wait();
+            Factory.Get<TelegramConfigurationDB>().CreateAsync(config).Wait();
         }
     }
 }
