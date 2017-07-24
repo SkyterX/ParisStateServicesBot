@@ -8,5 +8,7 @@ namespace ParisStateServicesBot.TelegramNotifications
         public string Id { get; set; }
 
         public string BotToken { get; set; }
+
+        public string OwnerChatId { get; set; }
     }
 }

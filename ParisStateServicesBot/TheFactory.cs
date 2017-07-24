@@ -12,6 +12,7 @@ namespace ParisStateServicesBot
         private readonly Lazy<Mongo> mongo;
         private readonly Lazy<TelegramSubscriptionDB> telegramSubscriptionDB;
         private readonly Lazy<TelegramConfigurationDB> telegramConfigurationDB;
+        private readonly Lazy<TelegramNotificationsDB> telegramNotificationsDB;
         private readonly Lazy<Task<TelegramNotificationBot>> telegramNotificationBot;
 
         private readonly LazyDisposable<IWebDriver> webDriver;
@@ -25,7 +26,8 @@ namespace ParisStateServicesBot
             mongo = Lazy(() => new Mongo());
             telegramSubscriptionDB = Lazy(() => new TelegramSubscriptionDB(Mongo));
             telegramConfigurationDB = Lazy(() => new TelegramConfigurationDB(Mongo));
-            telegramNotificationBot = DisposableLazy(() => TelegramNotificationBot.CreateAsync(TelegramSubscriptionDB, TelegramConfigurationDB));
+            telegramNotificationsDB = Lazy(() => new TelegramNotificationsDB(Mongo));
+            telegramNotificationBot = DisposableLazy(() => TelegramNotificationBot.CreateAsync(TelegramSubscriptionDB, TelegramNotificationsDB, TelegramConfigurationDB));
         }
 
         private static Lazy<T> Lazy<T>(Func<T> factory) => new Lazy<T>(factory);
@@ -43,6 +45,7 @@ namespace ParisStateServicesBot
         public Mongo Mongo => mongo.Value;
         public TelegramSubscriptionDB TelegramSubscriptionDB => telegramSubscriptionDB.Value;
         public TelegramConfigurationDB TelegramConfigurationDB => telegramConfigurationDB.Value;
+        public TelegramNotificationsDB TelegramNotificationsDB => telegramNotificationsDB.Value;
         public Task<TelegramNotificationBot> NotificationBot => telegramNotificationBot.Value;
     }
 }

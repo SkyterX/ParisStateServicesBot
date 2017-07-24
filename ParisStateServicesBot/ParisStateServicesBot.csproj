@@ -79,6 +79,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BookingStatusLoader.cs" />
+    <Compile Include="TelegramNotifications\TelegramNotification.cs" />
+    <Compile Include="TelegramNotifications\TelegramNotificationsDB.cs" />
     <Compile Include="TelegramNotifications\TelegramSubscription.cs" />
     <Compile Include="TelegramNotifications\TelegramSubscriptionDB.cs" />
     <Compile Include="Util\LazyDisposable.cs" />

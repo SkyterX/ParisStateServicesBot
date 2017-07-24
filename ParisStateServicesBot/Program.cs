@@ -41,6 +41,7 @@ namespace ParisStateServicesBot
                 catch (Exception e)
                 {
                     delay = TimeSpan.FromSeconds(30);
+                    await bot.NotifyErrorAsync(e);
                     Console.WriteLine(e);
                 }
                 stopwatch.Stop();
