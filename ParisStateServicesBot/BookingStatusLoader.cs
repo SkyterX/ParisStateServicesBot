@@ -19,7 +19,8 @@ namespace ParisStateServicesBot
 
             var cookiesBannerXPath = "//div[@id='cookies-banner']/div/a[.='Accepter']";
             var cookiesBanner = webDriver.FindElement(By.XPath(cookiesBannerXPath));
-            cookiesBanner?.Click();
+            if(cookiesBanner?.Displayed == true)
+                cookiesBanner.Click();
             new WebDriverWait(webDriver, TimeSpan.FromSeconds(5))
                 .Until(ExpectedConditions.InvisibilityOfElementLocated(By.XPath(cookiesBannerXPath)));
 
