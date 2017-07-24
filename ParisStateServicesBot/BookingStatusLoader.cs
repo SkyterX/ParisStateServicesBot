@@ -13,13 +13,13 @@ namespace ParisStateServicesBot
             this.webDriver = webDriver;
         }
 
-        public string GetBookingStatus()
+        public BookingStatus GetBookingStatus()
         {
             webDriver.Navigate().GoToUrl("http://www.hauts-de-seine.gouv.fr/booking/create/9489/0");
 
             var cookiesBannerXPath = "//div[@id='cookies-banner']/div/a[.='Accepter']";
             var cookiesBanner = webDriver.FindElement(By.XPath(cookiesBannerXPath));
-            if(cookiesBanner?.Displayed == true)
+            if (cookiesBanner?.Displayed == true)
                 cookiesBanner.Click();
             new WebDriverWait(webDriver, TimeSpan.FromSeconds(5))
                 .Until(ExpectedConditions.InvisibilityOfElementLocated(By.XPath(cookiesBannerXPath)));
@@ -30,7 +30,14 @@ namespace ParisStateServicesBot
             webDriver.FindElement(By.Id("planning9491")).Click();
             webDriver.FindElement(By.Name("nextButton")).Click();
 
-            return webDriver.FindElement(By.Id("inner_Booking")).Text;
+            var statusElement = webDriver.FindElement(By.Id("inner_Booking"));
+            var statusTitle = statusElement.FindElement(By.TagName("h2")).Text;
+            var statusDescription = statusElement.FindElement(By.Name("create")).Text;
+            return new BookingStatus
+            {
+                Title = statusTitle.Trim(),
+                Description = statusDescription.Trim()
+            };
         }
 
         public void Dispose()

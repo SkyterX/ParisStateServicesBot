@@ -9,7 +9,7 @@ namespace ParisStateServicesBot.TelegramNotifications
         [BsonId]
         public ObjectId Id { get; set; }
 
-        public string Message { get; set; }
+        public BookingStatus Status { get; set; }
         public DateTime Timestamp { get; set; }
     }
 }

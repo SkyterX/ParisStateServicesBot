@@ -36,7 +36,7 @@ namespace ParisStateServicesBot.TelegramNotifications
                 var message = args.Message;
                 if (message?.Type != MessageType.TextMessage) return;
                 var response = await HandleMessageAsync(message);
-                await Bot.SendTextMessageAsync(message.Chat.Id, response).ConfigureAwait(false);
+                await Bot.SendTextMessageAsync(message.Chat.Id, response, ParseMode.Markdown).ConfigureAwait(false);
             }
             catch (Exception e)
             {
@@ -62,7 +62,8 @@ namespace ParisStateServicesBot.TelegramNotifications
                 }
 
                 var lastMessageTime = lastMessage.Timestamp + (message.Date - DateTime.UtcNow);
-                return $"Latest message was at {lastMessageTime:T}\n{lastMessage.Message}";
+                var formattedStatus = FormatBookingStatus(lastMessage.Status);
+                return $"Latest message was at {lastMessageTime:T}\n{formattedStatus}";
             }
 
             return @"Usage:
@@ -70,23 +71,28 @@ namespace ParisStateServicesBot.TelegramNotifications
 ";
         }
 
-        public async Task NotifyAsync(string bookingStatus)
+        public async Task NotifyAsync(BookingStatus bookingStatus)
         {
-            await NotificationsDB.InsertAsync(new TelegramNotification {Message = bookingStatus}).ConfigureAwait(false);
-            if (bookingStatus.Contains("Vérification de disponibilité"))
+            await NotificationsDB.InsertAsync(new TelegramNotification {Status = bookingStatus}).ConfigureAwait(false);
+            if (bookingStatus.Title.Contains("Vérification de disponibilité"))
                 return;
 
             var subscriptions = await SubscriptionDB.LoadAllAsync();
             foreach (var subscription in subscriptions)
             {
-                await Bot.SendTextMessageAsync(subscription.ChatId, bookingStatus).ConfigureAwait(false);
+                await Bot.SendTextMessageAsync(subscription.ChatId, FormatBookingStatus(bookingStatus), ParseMode.Markdown).ConfigureAwait(false);
             }
+        }
+
+        public string FormatBookingStatus(BookingStatus x)
+        {
+            return $"*{x.Title}*\n{x.Description}";
         }
 
         public async Task NotifyErrorAsync(Exception e)
         {
             var config = await ConfigDB.LoadAsync().ConfigureAwait(false);
-            await Bot.SendTextMessageAsync(config.OwnerChatId, "Error occured :" + e);
+            await Bot.SendTextMessageAsync(config.OwnerChatId, "Error occured :" + e, ParseMode.Markdown);
         }
 
         public static async Task<TelegramNotificationBot> CreateAsync(

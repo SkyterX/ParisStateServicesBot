@@ -78,6 +78,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BookingStatus.cs" />
     <Compile Include="BookingStatusLoader.cs" />
     <Compile Include="TelegramNotifications\TelegramNotification.cs" />
     <Compile Include="TelegramNotifications\TelegramNotificationsDB.cs" />
