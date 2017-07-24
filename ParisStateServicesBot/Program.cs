@@ -1,17 +1,24 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace ParisStateServicesBot
 {
     class Program
     {
-        static void Main(string[] args)
+        public static void Main(string[] args)
+        {
+            RunAsync().Wait();
+        }
+
+        private static async Task RunAsync()
         {
             using (var factory = new TheFactory())
+            using (var bot = await factory.NotificationBot)
             {
                 var bookingStatus = factory.BookingStatusLoader.GetBookingStatus();
-                Console.Out.WriteLine(bookingStatus);
+                await bot.NotifyAsync(bookingStatus);
+                Console.ReadKey();
             }
-            Console.ReadKey();
         }
     }
 }
