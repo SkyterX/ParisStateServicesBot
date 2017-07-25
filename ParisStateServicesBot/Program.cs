@@ -15,9 +15,9 @@ namespace ParisStateServicesBot
         private static async Task RunAsync()
         {
             using (var factory = new TheFactory())
-            using (var bot = await factory.Get<Task<TelegramNotificationBot>>())
-            using (new NotificationTask(factory, bot).Run())
-            using (new VerificationTask(factory, bot).Run())
+            using (await factory.Get<TelegramNotificationBot>().StartAsync())
+            using (factory.Get<NotificationTask>().Run())
+            using (factory.Get<VerificationTask>().Run())
             {
                 Console.ReadKey();
             }

@@ -12,21 +12,26 @@ namespace ParisStateServicesBot.TelegramNotifications
         private TelegramConfigurationDB ConfigDB { get; }
         private TelegramSubscriptionDB SubscriptionDB { get; }
         private TelegramNotificationsDB NotificationsDB { get; }
-        private TelegramBotClient Bot { get; }
+        private TelegramBotClient Bot { get; set; }
 
-        private TelegramNotificationBot(
+        public TelegramNotificationBot(
             TelegramSubscriptionDB subscriptionDB,
             TelegramNotificationsDB notificationsDB,
-            TelegramConfigurationDB configDB,
-            TelegramConfig initialConfiguration)
+            TelegramConfigurationDB configDB)
         {
             NotificationsDB = notificationsDB;
             ConfigDB = configDB;
             SubscriptionDB = subscriptionDB;
+        }
+
+        public async Task<TelegramNotificationBot> StartAsync()
+        {
+            var initialConfiguration = await ConfigDB.LoadAsync().ConfigureAwait(false);
             Bot = new TelegramBotClient(initialConfiguration.BotToken);
             Bot.OnMessage += HandleMessage;
-
             Bot.StartReceiving();
+
+            return this;
         }
 
         private async void HandleMessage(object sender, MessageEventArgs args)
@@ -93,15 +98,6 @@ namespace ParisStateServicesBot.TelegramNotifications
         {
             var config = await ConfigDB.LoadAsync().ConfigureAwait(false);
             await Bot.SendTextMessageAsync(config.OwnerChatId, "Error occured :" + e, ParseMode.Markdown);
-        }
-
-        public static async Task<TelegramNotificationBot> CreateAsync(
-            TelegramSubscriptionDB subscriptionDB,
-            TelegramNotificationsDB notificationsDB,
-            TelegramConfigurationDB configDB)
-        {
-            var initialConfiguration = await configDB.LoadAsync().ConfigureAwait(false);
-            return new TelegramNotificationBot(subscriptionDB, notificationsDB, configDB, initialConfiguration);
         }
 
         public void Dispose()

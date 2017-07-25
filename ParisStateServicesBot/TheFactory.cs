@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
+using ParisStateServicesBot.PeriodicTasks;
 using ParisStateServicesBot.TelegramNotifications;
 using ParisStateServicesBot.Util;
 
@@ -21,7 +22,10 @@ namespace ParisStateServicesBot
             Register((TelegramSubscriptionDB x,
                     TelegramNotificationsDB y,
                     TelegramConfigurationDB z)
-                => TelegramNotificationBot.CreateAsync(x, y, z));
+                => new TelegramNotificationBot(x, y, z));
+
+            Register((TelegramNotificationBot bot, TelegramNotificationsDB nDB) => new VerificationTask(bot, nDB));
+            Register((TelegramNotificationBot bot, BookingStatusLoader loader) => new NotificationTask(bot, loader));
         }
 
         public T Get<T>()

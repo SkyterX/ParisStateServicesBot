@@ -6,14 +6,18 @@ namespace ParisStateServicesBot.PeriodicTasks
 {
     public class NotificationTask : PeriodicAsyncTask
     {
-        public NotificationTask(TheFactory factory, TelegramNotificationBot bot) : base(factory, bot)
+        private BookingStatusLoader BookingStatusLoader { get; }
+
+        public NotificationTask(TelegramNotificationBot bot, BookingStatusLoader bookingStatusLoader)
+            : base(bot)
         {
+            BookingStatusLoader = bookingStatusLoader;
         }
 
-        protected override async Task RunAsync(TheFactory factory, TelegramNotificationBot bot)
+        protected override async Task RunAsync()
         {
-            var bookingStatus = factory.Get<BookingStatusLoader>().GetBookingStatus();
-            await bot.NotifyAsync(bookingStatus).ConfigureAwait(false);
+            var bookingStatus = BookingStatusLoader.GetBookingStatus();
+            await Bot.NotifyAsync(bookingStatus).ConfigureAwait(false);
         }
 
         protected override TimeSpan DefaultDelay => TimeSpan.FromMinutes(5);

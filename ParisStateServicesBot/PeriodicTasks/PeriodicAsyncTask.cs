@@ -8,18 +8,20 @@ namespace ParisStateServicesBot.PeriodicTasks
 {
     public abstract class PeriodicAsyncTask : IDisposable
     {
+        protected TelegramNotificationBot Bot { get; }
         private CancellationTokenSource TokenSource { get; }
         private Thread RunnerThread { get; }
 
-        protected PeriodicAsyncTask(TheFactory factory, TelegramNotificationBot bot)
+        protected PeriodicAsyncTask(TelegramNotificationBot bot)
         {
+            Bot = bot;
             TokenSource = new CancellationTokenSource();
             var token = TokenSource.Token;
             RunnerThread = new Thread(() =>
             {
                 while (!token.IsCancellationRequested)
                 {
-                    Task.Run(() => TryRunAsync(factory, bot, token), token).Wait(token);
+                    Task.Run(() => TryRunAsync(token), token).Wait(token);
                 }
             });
         }
@@ -44,18 +46,18 @@ namespace ParisStateServicesBot.PeriodicTasks
             TokenSource?.Dispose();
         }
 
-        private async Task TryRunAsync(TheFactory factory, TelegramNotificationBot bot, CancellationToken token)
+        private async Task TryRunAsync(CancellationToken token)
         {
             var delay = DefaultDelay;
             var stopwatch = Stopwatch.StartNew();
             try
             {
-                await RunAsync(factory, bot).ConfigureAwait(false);
+                await RunAsync().ConfigureAwait(false);
             }
             catch (Exception e)
             {
                 delay = DelayAfterError;
-                await bot.NotifyErrorAsync(e).ConfigureAwait(false);
+                await Bot.NotifyErrorAsync(e).ConfigureAwait(false);
                 Console.WriteLine(e);
             }
             stopwatch.Stop();
@@ -63,7 +65,7 @@ namespace ParisStateServicesBot.PeriodicTasks
                 await Task.Delay(delay - stopwatch.Elapsed, token).ConfigureAwait(false);
         }
 
-        protected abstract Task RunAsync(TheFactory factory, TelegramNotificationBot bot);
+        protected abstract Task RunAsync();
 
         protected abstract TimeSpan DefaultDelay { get; }
         protected virtual TimeSpan DelayAfterError => TimeSpan.FromSeconds(30);
