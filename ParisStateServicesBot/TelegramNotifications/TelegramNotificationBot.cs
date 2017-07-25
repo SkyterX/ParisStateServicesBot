@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Args;
@@ -81,11 +83,21 @@ namespace ParisStateServicesBot.TelegramNotifications
             if (bookingStatus.Title == lastNotification?.Status?.Title)
                 return;
 
+            var errors = new List<Exception>();
             var subscriptions = await SubscriptionDB.LoadAllAsync();
             foreach (var subscription in subscriptions)
             {
-                await Bot.SendTextMessageAsync(subscription.ChatId, FormatBookingStatus(bookingStatus), ParseMode.Markdown).ConfigureAwait(false);
+                try
+                {
+                    await Bot.SendTextMessageAsync(subscription.ChatId, FormatBookingStatus(bookingStatus), ParseMode.Markdown).ConfigureAwait(false);
+                }
+                catch (Exception e)
+                {
+                    errors.Add(e);
+                }
             }
+            if(errors.Any())
+                throw new AggregateException(errors);
         }
 
         public string FormatBookingStatus(BookingStatus x)
@@ -96,7 +108,7 @@ namespace ParisStateServicesBot.TelegramNotifications
         public async Task NotifyErrorAsync(Exception e)
         {
             var config = await ConfigDB.LoadAsync().ConfigureAwait(false);
-            await Bot.SendTextMessageAsync(config.OwnerChatId, "Error occured :" + e);
+            await Bot.SendTextMessageAsync(config.OwnerChatId, "Error occured : " + e.Message);
         }
 
         public void Dispose()
