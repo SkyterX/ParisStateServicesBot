@@ -96,7 +96,7 @@ namespace ParisStateServicesBot.TelegramNotifications
         public async Task NotifyErrorAsync(Exception e)
         {
             var config = await ConfigDB.LoadAsync().ConfigureAwait(false);
-            await Bot.SendTextMessageAsync(config.OwnerChatId, "Error occured :" + e, ParseMode.Markdown);
+            await Bot.SendTextMessageAsync(config.OwnerChatId, "Error occured :" + e);
         }
 
         public void Dispose()
