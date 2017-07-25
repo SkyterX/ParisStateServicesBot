@@ -76,8 +76,9 @@ namespace ParisStateServicesBot.TelegramNotifications
 
         public async Task NotifyAsync(BookingStatus bookingStatus)
         {
+            var lastNotification = await NotificationsDB.LoadLatestAsync().ConfigureAwait(false);
             await NotificationsDB.InsertAsync(new TelegramNotification {Status = bookingStatus}).ConfigureAwait(false);
-            if (bookingStatus.Title.Contains("Vérification de disponibilité"))
+            if (bookingStatus.Title == lastNotification?.Status?.Title)
                 return;
 
             var subscriptions = await SubscriptionDB.LoadAllAsync();
