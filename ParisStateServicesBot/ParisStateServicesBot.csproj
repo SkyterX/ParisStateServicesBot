@@ -80,6 +80,9 @@
   <ItemGroup>
     <Compile Include="BookingStatus.cs" />
     <Compile Include="BookingStatusLoader.cs" />
+    <Compile Include="PeriodicTasks\NotificationTask.cs" />
+    <Compile Include="PeriodicTasks\PeriodicAsyncTask.cs" />
+    <Compile Include="PeriodicTasks\VerificationTask.cs" />
     <Compile Include="TelegramNotifications\TelegramNotification.cs" />
     <Compile Include="TelegramNotifications\TelegramNotificationsDB.cs" />
     <Compile Include="TelegramNotifications\TelegramSubscription.cs" />
