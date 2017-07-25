@@ -24,14 +24,12 @@ namespace ParisStateServicesBot.TelegramNotifications
             SubscriptionDB = subscriptionDB;
         }
 
-        public async Task<TelegramNotificationBot> StartAsync()
+        public async Task StartAsync()
         {
             var initialConfiguration = await ConfigDB.LoadAsync().ConfigureAwait(false);
             Bot = new TelegramBotClient(initialConfiguration.BotToken);
             Bot.OnMessage += HandleMessage;
             Bot.StartReceiving();
-
-            return this;
         }
 
         private async void HandleMessage(object sender, MessageEventArgs args)

@@ -21,15 +21,22 @@ namespace ParisStateServicesBot.PeriodicTasks
             {
                 while (!token.IsCancellationRequested)
                 {
-                    Task.Run(() => TryRunAsync(token), token).Wait(token);
+                    try
+                    {
+                        Task.Run(() => TryRunAsync(token), token).Wait(token);
+                    }
+                    catch (Exception e)
+                    {
+                        if (!token.IsCancellationRequested)
+                            Console.Out.WriteLine(e);
+                    }
                 }
             });
         }
 
-        public PeriodicAsyncTask Run()
+        public void Run()
         {
             RunnerThread.Start();
-            return this;
         }
 
         public void Cancel(TimeSpan timeout)
