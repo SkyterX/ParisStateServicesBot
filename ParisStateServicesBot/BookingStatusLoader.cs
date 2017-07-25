@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Support.UI;
 
@@ -18,7 +19,7 @@ namespace ParisStateServicesBot
             webDriver.Navigate().GoToUrl("http://www.hauts-de-seine.gouv.fr/booking/create/9489/0");
 
             var cookiesBannerXPath = "//div[@id='cookies-banner']/div/a[.='Accepter']";
-            var cookiesBanner = webDriver.FindElement(By.XPath(cookiesBannerXPath));
+            var cookiesBanner = webDriver.FindElements(By.XPath(cookiesBannerXPath)).SingleOrDefault();
             if (cookiesBanner?.Displayed == true)
                 cookiesBanner.Click();
             new WebDriverWait(webDriver, TimeSpan.FromSeconds(5))
