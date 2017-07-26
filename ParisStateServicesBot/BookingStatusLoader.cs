@@ -37,7 +37,8 @@ namespace ParisStateServicesBot
             return new BookingStatus
             {
                 Title = statusTitle.Trim(),
-                Description = statusDescription.Trim()
+                Description = statusDescription.Trim(),
+                PageSource = webDriver.PageSource
             };
         }
 

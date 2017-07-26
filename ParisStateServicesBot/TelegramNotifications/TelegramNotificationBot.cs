@@ -60,7 +60,7 @@ namespace ParisStateServicesBot.TelegramNotifications
                 return "Pong!";
             if (message.Text.StartsWith("/last"))
             {
-                var lastMessage = await NotificationsDB.LoadLatestAsync();
+                var lastMessage = await NotificationsDB.LoadLatestAsync().ConfigureAwait(false);
                 if (lastMessage == null)
                 {
                     return "No messages yet.";
@@ -78,13 +78,23 @@ namespace ParisStateServicesBot.TelegramNotifications
 
         public async Task NotifyAsync(BookingStatus bookingStatus)
         {
-            var lastNotification = await NotificationsDB.LoadLatestAsync().ConfigureAwait(false);
+            const string bookingUnavailable = "Vérification de disponibilité";
+
+            if (bookingStatus.Title.Contains(bookingUnavailable))
+                bookingStatus.PageSource = null;
             await NotificationsDB.InsertAsync(new TelegramNotification {Status = bookingStatus}).ConfigureAwait(false);
-            if (bookingStatus.Title == lastNotification?.Status?.Title)
+
+            var lastNotification = await NotificationsDB.LoadLatestAsync().ConfigureAwait(false);
+            if (bookingStatus.Title == lastNotification?.Status?.Title || bookingStatus.Title.Contains(bookingUnavailable))
                 return;
 
+            await NotifySubscribersAsync(bookingStatus).ConfigureAwait(false);
+        }
+
+        private async Task NotifySubscribersAsync(BookingStatus bookingStatus)
+        {
             var errors = new List<Exception>();
-            var subscriptions = await SubscriptionDB.LoadAllAsync();
+            var subscriptions = await SubscriptionDB.LoadAllAsync().ConfigureAwait(false);
             foreach (var subscription in subscriptions)
             {
                 try
@@ -96,7 +106,7 @@ namespace ParisStateServicesBot.TelegramNotifications
                     errors.Add(e);
                 }
             }
-            if(errors.Any())
+            if (errors.Any())
                 throw new AggregateException(errors);
         }
 
