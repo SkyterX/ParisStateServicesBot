@@ -34,6 +34,9 @@ namespace ParisStateServicesBot
             var statusElement = webDriver.FindElement(By.Id("inner_Booking"));
             var statusTitle = statusElement.FindElement(By.TagName("h2")).Text;
             var statusDescription = statusElement.FindElement(By.Name("create")).Text;
+
+            webDriver.FindElements(By.Name("nextButton")).SingleOrDefault()?.Click();
+
             return new BookingStatus
             {
                 Title = statusTitle.Trim(),

@@ -21,5 +21,6 @@ namespace ParisStateServicesBot.PeriodicTasks
         }
 
         protected override TimeSpan DefaultDelay => TimeSpan.FromMinutes(5);
+        protected override TimeSpan DelayAfterError => TimeSpan.FromMinutes(1);
     }
 }
